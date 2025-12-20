@@ -93,17 +93,33 @@ class PPersona:
 
     def nuevaPersona(self, usuario: dict):
         try:
+            lista = self.__nPersona.mostrarPersonas()
+            correos = [u['correo'] for u in lista]
+
+            if usuario['correo'] in correos:
+                st.warning('Ese correo ya está registrado')
+                return
+
             self.__nPersona.nuevaPersona(usuario)
             st.success('Registro insertado')
             self.limpiar()
+
         except Exception as e:
             st.error(e)
 
     def actualizarPersona(self, usuario: dict, nombre: str):
         try:
+            lista = self.__nPersona.mostrarPersonas()
+
+            for u in lista:
+                if u['correo'] == usuario['correo'] and u['nombre'] != nombre:
+                    st.warning('Ese correo ya pertenece a otro usuario')
+                    return
+
             self.__nPersona.actualizarPersona(usuario, nombre)
             st.success('Registro actualizado')
             self.limpiar()
+
         except Exception as e:
             st.error(e)
 
