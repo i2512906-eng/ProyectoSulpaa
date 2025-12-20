@@ -9,8 +9,10 @@ class NPersona:
 
     def nuevaPersona(self, usuario:dict):
         self.__dPersona.nuevaPersona(usuario)
-    def actualizarPersona(self):
-        pass
+    
+    def actualizarPersona(self, usuario:dict, nombre:str):
+        return self.__dPersona.actualizarPersona(usuario, nombre)
+    
     def eliminarPersona(self):
         pass
         

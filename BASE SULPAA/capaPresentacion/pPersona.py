@@ -1,57 +1,124 @@
 from capaLogicaNegocios.nPersona import NPersona
 import streamlit as st
 
+
 class PPersona:
     def __init__(self):
         self.__nPersona = NPersona()
+
         if 'formularioKey' not in st.session_state:
             st.session_state.formularioKey = 0
+        if 'usuario_seleccionado' not in st.session_state:
+            st.session_state.usuario_seleccionado = None
+        if 'nombre_sesion' not in st.session_state:
+            st.session_state.nombre_sesion = ''
+        if 'apellido_sesion' not in st.session_state:
+            st.session_state.apellido_sesion = ''
+        if 'correo_sesion' not in st.session_state:
+            st.session_state.correo_sesion = ''
+        if 'contrasena_sesion' not in st.session_state:
+            st.session_state.contrasena_sesion = ''
+
         self.__construirInterfaz()
 
     def __construirInterfaz(self):
-        st.title('Registro usuario')
-        if st.session_state.usuario_seleccionado != '':
-            st.session_state.nombre_sesion = st.session_state.usuario_seleccionado['Nombre']
-            st.session_state.apellido_sesion = st.session_state.usuario_seleccionado['Apellido']
-            st.session_state.correo_sesion = st.session_state.usuario_seleccionado['Correo']
-            st.session_state.contrasena_sesion = st.session_state.usuario_seleccionado['Contrasena']
+        st.title('Registro de usuarios')
+
+        if st.session_state.usuario_seleccionado:
+            st.session_state.nombre_sesion = st.session_state.usuario_seleccionado['nombre']
+            st.session_state.apellido_sesion = st.session_state.usuario_seleccionado['apellido']
+            st.session_state.correo_sesion = st.session_state.usuario_seleccionado['correo']
+            st.session_state.contrasena_sesion = st.session_state.usuario_seleccionado['contrasena']
+
         with st.form(f'Formulario {st.session_state.formularioKey}'):
             txtNombre = st.text_input('Nombre', value=st.session_state.nombre_sesion)
-            txtApellido = st.text_input('Apellido', value=st.session_state.apellido_sesion )
-            txtCorreo= st.text_input('Correo', value=st.session_state.correo_sesion)
-            txtContrasena= st.text_input('Contrasena', value=st.session_state.contrasena_sesion)
-            btnGuardar = st.form_submit_button('Guardar', type ='primary')
+            txtApellido = st.text_input('Apellido', value=st.session_state.apellido_sesion)
+            txtCorreo = st.text_input('Correo', value=st.session_state.correo_sesion)
+            txtContrasena = st.text_input('Contraseña', value=st.session_state.contrasena_sesion)
 
-            if btnGuardar:
-                usuario = {
-                    'nombre': txtNombre,
-                    'apellido': txtApellido,
-                    'correo': txtCorreo,
-                    'contrasena': txtContrasena
-                }
-                self.nuevaPersona(usuario)
+            if st.session_state.usuario_seleccionado:
+                btnActualizar = st.form_submit_button('Actualizar')
+                if btnActualizar:
+                    usuario = {
+                        'nombre': txtNombre,
+                        'apellido': txtApellido,
+                        'correo': txtCorreo,
+                        'contrasena': txtContrasena
+                    }
+                    self.actualizarPersona(usuario, txtNombre)
+            else:
+                btnGuardar = st.form_submit_button('Guardar')
+                if btnGuardar:
+                    usuario = {
+                        'nombre': txtNombre,
+                        'apellido': txtApellido,
+                        'correo': txtCorreo,
+                        'contrasena': txtContrasena
+                    }
+                    self.nuevaPersona(usuario)
+
         self.mostrarPersonas()
 
     def mostrarPersonas(self):
         listaPersonas = self.__nPersona.mostrarPersonas()
-        col1, col2 = st.columns({10,2})
-        with col1:
-            usuario_seleccionado = st.dataframe(listaPersonas, selection_mode='single-row', on_select='rerun')
-        with col2:
-            if usuario_seleccionado.selection.rows:
-                st.button('Editar')
 
-    def nuevaPersona(self, usuario:dict):
+        if not listaPersonas:
+            st.info('No hay usuarios registrados')
+            return
+
+        st.subheader('Usuarios registrados')
+        st.dataframe(listaPersonas)
+
+        opciones = [f"{u['nombre']} {u['apellido']}" for u in listaPersonas]
+        seleccion = st.selectbox(
+            'Selecciona un usuario',
+            ['-- Seleccionar --'] + opciones
+        )
+
+        if seleccion != '-- Seleccionar --':
+            indice = opciones.index(seleccion)
+            usuarioSeleccionado = listaPersonas[indice]
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+                if st.button('Editar'):
+                    st.session_state.usuario_seleccionado = usuarioSeleccionado
+                    st.rerun()
+
+            with col2:
+                if st.button('Eliminar'):
+                    self.eliminarPersona(usuarioSeleccionado['nombre'])
+                    st.rerun()
+
+    def nuevaPersona(self, usuario: dict):
         try:
             self.__nPersona.nuevaPersona(usuario)
-            st.toast('Registro insertado', duration='short')
+            st.success('Registro insertado')
             self.limpiar()
         except Exception as e:
             st.error(e)
-            st.toast('Registro no insertado', duration='short')
+
+    def actualizarPersona(self, usuario: dict, nombre: str):
+        try:
+            self.__nPersona.actualizarPersona(usuario, nombre)
+            st.success('Registro actualizado')
+            self.limpiar()
+        except Exception as e:
+            st.error(e)
+
+    def eliminarPersona(self, nombre: str):
+        try:
+            self.__nPersona.eliminarPersona(nombre)
+            st.success('Registro eliminado')
+        except Exception as e:
+            st.error(e)
 
     def limpiar(self):
         st.session_state.formularioKey += 1
+        st.session_state.usuario_seleccionado = None
+        st.session_state.nombre_sesion = ''
+        st.session_state.apellido_sesion = ''
+        st.session_state.correo_sesion = ''
+        st.session_state.contrasena_sesion = ''
         st.rerun()
-
-      

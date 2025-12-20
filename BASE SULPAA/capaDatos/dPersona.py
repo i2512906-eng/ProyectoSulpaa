@@ -23,8 +23,11 @@ class Dpersona:
     def nuevaPersona(self, usuario:dict):
         consulta = self.__db.table(self.__nombreTabla).insert(usuario)
         return self.__ejecutarConsultas(consulta)
-    def actualizarPersona(self):
-        pass
-    def eliminarPersona(self):
-        pass
-        
+    
+    def actualizarPersona(self, usuario:dict, nombre:str):
+        consulta = self.__db.table(self.__nombreTabla).update(usuario).eq('nombre', nombre)
+        return self.__ejecutarConsultas(consulta)
+    
+    def eliminarPersona(self, nombre: str):
+        consulta = self.__db.table(self.__nombreTabla).delete().eq('nombre',nombre)
+        return self.__ejecutarConsultas(consulta)
